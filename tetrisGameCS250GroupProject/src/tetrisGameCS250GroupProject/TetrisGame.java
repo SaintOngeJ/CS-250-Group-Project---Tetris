@@ -23,4 +23,4 @@ public class TetrisGame {
 
 	}//main()
 
-}//end class Tetris
+}//end class TetrisGame
