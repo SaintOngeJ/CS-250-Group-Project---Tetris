@@ -1,0 +1,18 @@
+1.	Game pieces (Tetrominoes): define 2D arrays to store the 7 Tetrominoes
+	shapes and the corresponding arrays after rotating them in four angles
+	(left to right).
+	
+2.  Main game board: Use a 2D array to represent the main game board (10 x 20).
+	- Display the game on the console first to simulate the game.
+	- Talk to Prof. Nguyen about mapping the 2D array into a GUI
+		* merge the piece array into the game board array.
+
+3.  GUI sketch:
+	- game menu
+	- start/pause/resume buttons
+	- new game button
+	- leaderboard button
+	- labels to show the current game score or time
+	- buttons or instructions to move/rotate the pieces
+	
+4.  Complete the design for the project (GUI, class, data, methods, etc.)
