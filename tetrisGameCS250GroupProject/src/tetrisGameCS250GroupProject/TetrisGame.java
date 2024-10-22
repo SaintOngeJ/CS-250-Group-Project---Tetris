@@ -11,12 +11,13 @@
  */
 package tetrisGameCS250GroupProject;
 
+import java.awt.Color;
 import java.awt.Point;
+import java.util.ArrayList;
 
 public class TetrisGame {
 	
 	private final Point[][][] Tetraminoes = {
-		
 		// O-piece
 		{
 			{new Point(0, 0),new Point(0, 1),new Point(1, 0),new Point(1, 1)},
@@ -73,6 +74,17 @@ public class TetrisGame {
 			{new Point(1, 0),new Point(0, 1),new Point(1, 1),new Point(0, 2)}
 		}
 	};
+	
+	private final Color[] tetramino_colors = {
+			Color.CYAN, Color.GREEN, Color.MAGENTA,
+			Color.RED, Color.YELLOW, Color.YELLOW, Color.ORANGE};
+	
+	private Point piece_origin;
+	private int current_piece;
+	private int rotation;
+	private ArrayList<Integer> next_pieces = new ArrayList<Integer>();
+	private long score;
+	private Color[][] game_boarder;
 	
 	
 
