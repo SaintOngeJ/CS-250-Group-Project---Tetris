@@ -75,15 +75,21 @@ public class TetrisGame {
 		}
 	};
 	
+	// array of piece colors
 	private final Color[] tetramino_colors = {
 			Color.CYAN, Color.GREEN, Color.MAGENTA,
 			Color.RED, Color.YELLOW, Color.YELLOW, Color.ORANGE};
-	
+	// starting point of the pieces on the game board
 	private Point piece_origin;
+	// value of the current piece that the user is manipulating
 	private int current_piece;
+	// value of the current pieces' rotation
 	private int rotation;
-	private ArrayList<Integer> next_pieces = new ArrayList<Integer>();
+	// array list of the next pieces to be placed on the game board
+	private ArrayList<Integer> next_pieces = new ArrayList<>();
+	// value that tracks the players' score
 	private long score;
+	// array that defines the game boarder
 	private Color[][] game_boarder;
 	
 	
