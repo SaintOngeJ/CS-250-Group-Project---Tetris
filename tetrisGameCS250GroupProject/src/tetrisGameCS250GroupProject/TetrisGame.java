@@ -79,20 +79,50 @@ public class TetrisGame {
 	private final Color[] tetramino_colors = {
 			Color.CYAN, Color.GREEN, Color.MAGENTA,
 			Color.RED, Color.YELLOW, Color.YELLOW, Color.ORANGE};
+	
+	// piece values
 	// starting point of the pieces on the game board
 	private Point piece_origin;
 	// value of the current piece that the user is manipulating
 	private int current_piece;
 	// value of the current pieces' rotation
 	private int rotation;
+	
 	// array list of the next pieces to be placed on the game board
 	private ArrayList<Integer> next_pieces = new ArrayList<>();
+	
 	// value that tracks the players' score
 	private long score;
+	
+	// game board
 	// array that defines the game boarder
 	private Color[][] game_boarder;
 	
+	// game board width and height
+	private static final int board_width = 12;
+	private static final int board_height = 22;
 	
+	/**
+	 * This method initializes the game boarder
+	 */
+	public void initializeWell() {
+		game_boarder = new Color[12][22];
+		for(int row = 0; row < board_width; row++)
+			for(int col = 0; col < board_height; col++)
+				if(row == 0 || row == 11 || col == 22) {
+					game_boarder[row][col] = Color.GRAY;
+				} else {
+					game_boarder[row][col] = Color.BLACK;
+				}
+		//newPiece();
+	} // initializeWell()
+	
+	/**
+	 * This method places a new piece into the dropping position
+	 */
+	public void newPiece() {
+		
+	} // newPiece()
 
 	/**
 	 * @param args
