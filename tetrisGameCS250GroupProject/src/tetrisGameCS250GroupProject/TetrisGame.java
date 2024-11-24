@@ -3,11 +3,11 @@
  * Author: Wyatt St. Onge, Weston Cory, Everett Rosenow
  * Date: Sep 21, 2024
  * Assignment: tetrisGameCS250GroupProject
- * Goals: This class handles all of the tetris game logic
+ * Goals: Implement the classic Tetris game with a GUI, controls, scoring, and title screen.
  * Inputs:
- * Outputs:
- * Packages: tetrisGameCS250GroupProject,
- * Algorithms:
+ * Outputs: Tetris game screen with falling pieces and score display.
+ * Packages: javax.swing, java.awt, java.awt.event
+ * Algorithms: Collision detection, row clearing, piece rotation, and piece movement.
  */
 package tetrisGameCS250GroupProject;
 
@@ -20,17 +20,7 @@ import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Collections;
 
-/**
- * Class: Tetris.java
- * Author: Weston Cory
- * Date: Nov 12, 2024
- * Assignment: Reference
- * Goals: Implement the classic Tetris game with a GUI, controls, scoring, and title screen.
- * Inputs: Arrow keys for controls, Spacebar to drop pieces.
- * Outputs: Tetris game screen with falling pieces and score display.
- * Packages: javax.swing, java.awt, java.awt.event
- * Algorithms: Collision detection, row clearing, piece rotation, and piece movement.
- */
+
 
 public class Tetris extends JPanel {
 
