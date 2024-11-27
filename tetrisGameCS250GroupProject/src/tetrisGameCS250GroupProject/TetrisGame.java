@@ -25,8 +25,9 @@ import java.util.Collections;
 public class TetrisGame extends JPanel {
 
     private static final long serialVersionUID = -8715353373678321308L;
-
-    private final Point[][][] Tetraminos = {
+    
+    // Matrices of the tetrominoes
+    private final Point[][][] tetrominoes = {
     	// I-Piece
         {
         	{new Point(0, 1), new Point(1, 1), new Point(2, 1), new Point(3, 1)},
@@ -78,7 +79,7 @@ public class TetrisGame extends JPanel {
         }
     };
 
-    private final Color[] tetraminoColors = {
+    private final Color[] tetrominoColors = {
             Color.cyan, Color.blue, Color.orange, Color.yellow, Color.green,
             Color.pink, Color.red
     };
@@ -151,9 +152,9 @@ public class TetrisGame extends JPanel {
 
     // Make the dropping piece part of the well
     public void fixToBoarder() {
-        for (Point p : Tetraminos[currentPiece][rotation]) {
+        for (Point p : tetrominoes[currentPiece][rotation]) {
             well[pieceOrigin.x + p.x][pieceOrigin.y + p.y] =
-            		tetraminoColors[currentPiece];
+            		tetrominoColors[currentPiece];
         }
         clearRows();
         newPiece();
@@ -206,7 +207,7 @@ public class TetrisGame extends JPanel {
 
     // Check for collision at a given position and rotation
     public boolean checkForCollision(int x, int y, int rotation) {
-        for (Point p : Tetraminos[currentPiece][rotation]) {
+        for (Point p : tetrominoes[currentPiece][rotation]) {
             if (well[x + p.x][y + p.y] != Color.BLACK) {
                 return true;
             }
@@ -216,8 +217,8 @@ public class TetrisGame extends JPanel {
 
     // Draw the falling piece
     private void drawPiece(Graphics g) {
-        for (Point p : Tetraminos[currentPiece][rotation]) {
-            g.setColor(tetraminoColors[currentPiece]);
+        for (Point p : tetrominoes[currentPiece][rotation]) {
+            g.setColor(tetrominoColors[currentPiece]);
             g.fillRect(26 * (pieceOrigin.x + p.x), 26
             		* (pieceOrigin.y + p.y), 25, 25);
         }
@@ -303,8 +304,8 @@ public class TetrisGame extends JPanel {
         g.drawString("Next Piece:", 26 * 13, 50);
 
         // Draw the next piece using its default rotation (0)
-        for (Point p : Tetraminos[nextPiece][0]) {
-            g.setColor(tetraminoColors[nextPiece]);
+        for (Point p : tetrominoes[nextPiece][0]) {
+            g.setColor(tetrominoColors[nextPiece]);
             g.fillRect(26 * 14 + (p.x * 25), 60 + (p.y * 25), 25, 25);
         }
 
