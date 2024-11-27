@@ -25,71 +25,9 @@ import java.util.Collections;
 public class TetrisGame extends JPanel {
 
     private static final long serialVersionUID = -8715353373678321308L;
-    
-    // Matrices of the tetrominoes
-    private final Point[][][] tetrominoes = {
-    	// I-Piece
-        {
-        	{new Point(0, 1), new Point(1, 1), new Point(2, 1), new Point(3, 1)},
-            {new Point(1, 0), new Point(1, 1), new Point(1, 2), new Point(1, 3)},
-            {new Point(0, 1), new Point(1, 1), new Point(2, 1), new Point(3, 1)},
-            {new Point(1, 0), new Point(1, 1), new Point(1, 2), new Point(1, 3)}
-        },
-        // J-Piece
-        {
-            {new Point(0, 1), new Point(1, 1), new Point(2, 1), new Point(2, 0)},
-            {new Point(1, 0), new Point(1, 1), new Point(1, 2), new Point(2, 2)},
-            {new Point(0, 1), new Point(1, 1), new Point(2, 1), new Point(0, 2)},
-            {new Point(1, 0), new Point(1, 1), new Point(1, 2), new Point(0, 0)}
-        },
-        // L-Piece
-        {
-            {new Point(0, 1), new Point(1, 1), new Point(2, 1), new Point(2, 2)},
-            {new Point(1, 0), new Point(1, 1), new Point(1, 2), new Point(0, 2)},
-            {new Point(0, 1), new Point(1, 1), new Point(2, 1), new Point(0, 0)},
-            {new Point(1, 0), new Point(1, 1), new Point(1, 2), new Point(2, 0)}
-        },
-        // O-Piece
-        {
-            {new Point(0, 0), new Point(0, 1), new Point(1, 0), new Point(1, 1)},
-            {new Point(0, 0), new Point(0, 1), new Point(1, 0), new Point(1, 1)},
-            {new Point(0, 0), new Point(0, 1), new Point(1, 0), new Point(1, 1)},
-            {new Point(0, 0), new Point(0, 1), new Point(1, 0), new Point(1, 1)}
-        },
-        // S-Piece
-        {
-            {new Point(1, 0), new Point(2, 0), new Point(0, 1), new Point(1, 1)},
-            {new Point(0, 0), new Point(0, 1), new Point(1, 1), new Point(1, 2)},
-            {new Point(1, 0), new Point(2, 0), new Point(0, 1), new Point(1, 1)},
-            {new Point(0, 0), new Point(0, 1), new Point(1, 1), new Point(1, 2)}
-        },
-        // T-Piece
-        {
-            {new Point(1, 0), new Point(0, 1), new Point(1, 1), new Point(2, 1)},
-            {new Point(1, 0), new Point(0, 1), new Point(1, 1), new Point(1, 2)},
-            {new Point(0, 1), new Point(1, 1), new Point(2, 1), new Point(1, 2)},
-            {new Point(1, 0), new Point(1, 1), new Point(2, 1), new Point(1, 2)}
-        },
-        // Z-Piece
-        {
-            {new Point(0, 0), new Point(1, 0), new Point(1, 1), new Point(2, 1)},
-            {new Point(1, 0), new Point(0, 1), new Point(1, 1), new Point(0, 2)},
-            {new Point(0, 0), new Point(1, 0), new Point(1, 1), new Point(2, 1)},
-            {new Point(1, 0), new Point(0, 1), new Point(1, 1), new Point(0, 2)}
-        }
-    };
 
-    private final Color[] tetrominoColors = {
-            Color.cyan, Color.blue, Color.orange, Color.yellow, Color.green,
-            Color.pink, Color.red
-    };
-
-    private Point pieceOrigin;
-    private int currentPiece;
-    private int rotation;
-    private ArrayList<Integer> nextPieces = new ArrayList<>();
     private long score;
-    private Color[][] well;
+    private static Color[][] well;
     private boolean gameStarted = false;
 
     private void initialize() {
@@ -104,66 +42,29 @@ public class TetrisGame extends JPanel {
             }
         }
         score = 0; // Reset the score
-        nextPieces.clear(); // Clear upcoming pieces
-        newPiece();
+        Tetrominoes.nextPieces.clear(); // Clear upcoming pieces
+        Tetrominoes tetrominoes = new Tetrominoes();
+		tetrominoes.newPiece();
     } // initialize()
 
-    // Create a new piece
-    public void newPiece() {
-        pieceOrigin = new Point(5, 2);
-        rotation = 0;
-        if (nextPieces.isEmpty()) {
-            Collections.addAll(nextPieces, 0, 1, 2, 3, 4, 5, 6);
-            Collections.shuffle(nextPieces);
-        }
-        currentPiece = nextPieces.get(0);
-        nextPieces.remove(0);
-    } // newPiece()
-
-    // Rotate the piece
-    public void rotate(int i) {
-        int newRotation = (rotation + i) % 4;
-        if (newRotation < 0) {
-            newRotation = 3;
-        }
-        if (!checkForCollision(pieceOrigin.x, pieceOrigin.y, newRotation)) {
-            rotation = newRotation;
-        }
-        repaint();
-    } // rotate()
-
-    // Move the piece
-    public void movePiece(int i) {
-        if (!checkForCollision(pieceOrigin.x + i, pieceOrigin.y, rotation)) {
-            pieceOrigin.x += i;
-        }
-        repaint();
-    } // movePiece()
-
-    // Drop the piece down
-    public void dropPieceDown() {
-        if (!checkForCollision(pieceOrigin.x, pieceOrigin.y + 1, rotation)) {
-            pieceOrigin.y += 1;
-        } else {
-            fixToBoarder();
-        }
-        repaint();
-    } // dropPieceDown()
-
     // Make the dropping piece part of the well
-    public void fixToBoarder() {
-        for (Point p : tetrominoes[currentPiece][rotation]) {
-            well[pieceOrigin.x + p.x][pieceOrigin.y + p.y] =
-            		tetrominoColors[currentPiece];
+    public static void fixToBoarder() {
+    	TetrisLogic logic = new TetrisLogic();
+        for (Point p : Tetrominoes.tetrominoes[Tetrominoes.currentPiece]
+        											   [Tetrominoes.rotation]) {
+            well[logic.pieceOrigin.x + p.x][logic.pieceOrigin.y + p.y] =
+            		Tetrominoes.tetrominoColors[Tetrominoes.currentPiece];
         }
         clearRows();
-        newPiece();
+        Tetrominoes newPiece = new Tetrominoes();
+        newPiece.newPiece();
     } // fixToBoarder()
 
     // Clear completed rows
-    public void clearRows() {
+    public static void clearRows() {
         boolean gap;
         int numClears = 0;
+        Tetrominoes rows = new Tetrominoes();
 
         for (int j = 21; j > 0; j--) {
             gap = false;
@@ -174,7 +75,7 @@ public class TetrisGame extends JPanel {
                 }
             }
             if (!gap) {
-                deleteRow(j);
+            	deleteRow(j);
                 j += 1;
                 numClears += 1;
             }
@@ -197,7 +98,7 @@ public class TetrisGame extends JPanel {
     } // clearRows()
 
     // Delete a row after clearing it
-    public void deleteRow(int row) {
+    public static void deleteRow(int row) {
         for (int j = row - 1; j > 0; j--) {
             for (int i = 1; i < 11; i++) {
                 well[i][j + 1] = well[i][j];
@@ -206,8 +107,9 @@ public class TetrisGame extends JPanel {
     } // deleteRow()
 
     // Check for collision at a given position and rotation
-    public boolean checkForCollision(int x, int y, int rotation) {
-        for (Point p : tetrominoes[currentPiece][rotation]) {
+    protected static boolean checkForCollision(int x, int y, int rotation) {
+        for (Point p : Tetrominoes.tetrominoes[Tetrominoes.currentPiece]
+        														   [rotation]) {
             if (well[x + p.x][y + p.y] != Color.BLACK) {
                 return true;
             }
@@ -217,10 +119,12 @@ public class TetrisGame extends JPanel {
 
     // Draw the falling piece
     private void drawPiece(Graphics g) {
-        for (Point p : tetrominoes[currentPiece][rotation]) {
-            g.setColor(tetrominoColors[currentPiece]);
-            g.fillRect(26 * (pieceOrigin.x + p.x), 26
-            		* (pieceOrigin.y + p.y), 25, 25);
+    	TetrisLogic logic = new TetrisLogic();
+        for (Point p : Tetrominoes.tetrominoes[Tetrominoes.currentPiece]
+        											   [Tetrominoes.rotation]) {
+            g.setColor(Tetrominoes.tetrominoColors[Tetrominoes.currentPiece]);
+			g.fillRect(26 * (logic.pieceOrigin.x + p.x), 26
+            		* (logic.pieceOrigin.y + p.y), 25, 25);
         }
     } // drawPiece()
 
@@ -299,13 +203,15 @@ public class TetrisGame extends JPanel {
      */
     private void drawNextPiece(Graphics g) {
     	// Get the next piece
-        int nextPiece = nextPieces.isEmpty() ? 0 : nextPieces.get(0);
+    	Tetrominoes nextPieces = new Tetrominoes();
+        int nextPiece = nextPieces.nextPieces.isEmpty()
+        			? 0 : nextPieces.nextPieces.get(0);
         g.setColor(Color.WHITE);
         g.drawString("Next Piece:", 26 * 13, 50);
 
         // Draw the next piece using its default rotation (0)
-        for (Point p : tetrominoes[nextPiece][0]) {
-            g.setColor(tetrominoColors[nextPiece]);
+        for (Point p :Tetrominoes.tetrominoes[nextPiece][0]) {
+            g.setColor(Tetrominoes.tetrominoColors[nextPiece]);
             g.fillRect(26 * 14 + (p.x * 25), 60 + (p.y * 25), 25, 25);
         }
 
@@ -343,6 +249,7 @@ public class TetrisGame extends JPanel {
 
         final TetrisGame game = new TetrisGame();
         game.initialize();
+        Tetrominoes gamePieces = new Tetrominoes();
 
         // Set layout for adding components
         frame.setLayout(new BorderLayout());
@@ -355,19 +262,19 @@ public class TetrisGame extends JPanel {
                 if (game.gameStarted) {
                     switch (e.getKeyCode()) {
                         case KeyEvent.VK_UP:
-                            game.rotate(-1);
+                        	gamePieces.rotate(-1);
                             break;
                         case KeyEvent.VK_DOWN:
-                            game.rotate(1);
+                        	gamePieces.rotate(1);
                             break;
                         case KeyEvent.VK_LEFT:
-                            game.movePiece(-1);
+                        	gamePieces.movePiece(-1);
                             break;
                         case KeyEvent.VK_RIGHT:
-                            game.movePiece(1);
+                        	gamePieces.movePiece(1);
                             break;
                         case KeyEvent.VK_SPACE:
-                            game.dropPieceDown();
+                        	gamePieces.dropPieceDown();
                             break;
                     }
                 } else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
@@ -406,7 +313,7 @@ public class TetrisGame extends JPanel {
                     try {
                         if (game.gameStarted) {
                             Thread.sleep(500);
-                            game.dropPieceDown();
+                            gamePieces.dropPieceDown();
                         } else {
                             Thread.sleep(100);
                         }
