@@ -18,7 +18,7 @@ import java.util.Collections;
 public class Tetrominoes {
 	
 	// Matrices of the tetrominoes
-    protected final static Point[][][] tetrominoes = {
+    final static Point[][][] tetrominoes = {
     	// I-Piece
         {
         	{new Point(0, 1), new Point(1, 1), new Point(2, 1), new Point(3, 1)},
@@ -70,7 +70,7 @@ public class Tetrominoes {
         }
     };
 
-    protected final static Color[] tetrominoColors = {
+    final static Color[] tetrominoColors = {
             Color.cyan, Color.blue, Color.orange, Color.yellow, Color.green,
             Color.pink, Color.red
     };
@@ -79,7 +79,9 @@ public class Tetrominoes {
     protected static int rotation;
     static ArrayList<Integer> nextPieces = new ArrayList<>();
     
-    // Create a new piece
+    /**
+     * This method creates a new piece (tetromino)
+     */
     public void newPiece() {
     	TetrisLogic logic = new TetrisLogic();
     	logic.pieceOrigin = new Point(5, 2);
@@ -92,7 +94,10 @@ public class Tetrominoes {
         nextPieces.remove(0);
     } // newPiece()
     
-    // Rotate the piece
+    /**
+     * This method rotates the current piece on the game board
+     * @param i: 
+     */
     public void rotate(int i) {
     	TetrisLogic logic = new TetrisLogic();
         int newRotation = (rotation + i) % 4;
@@ -106,8 +111,11 @@ public class Tetrominoes {
         TetrisGame tetrisGame = new TetrisGame();
 		tetrisGame.repaint();
     } // rotate()
-
-    // Move the piece
+    
+    /**
+     * This method moves the current piece left and right on the game board
+     * @param i: x value of the current piece
+     */
     public void movePiece(int i) {
     	TetrisLogic logic = new TetrisLogic();
         if (!TetrisGame.checkForCollision(logic.pieceOrigin.x + i,
@@ -117,8 +125,10 @@ public class Tetrominoes {
         TetrisGame tetrisGame = new TetrisGame();
 		tetrisGame.repaint();
     } // movePiece()
-
-    // Drop the piece down
+    
+    /**
+     * This method drops the current piece down the well on the game board
+     */
     public void dropPieceDown() {
     	TetrisLogic logic = new TetrisLogic();
         if (!TetrisGame.checkForCollision(logic.pieceOrigin.x,

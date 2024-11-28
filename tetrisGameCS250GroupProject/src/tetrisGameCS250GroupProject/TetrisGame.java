@@ -19,18 +19,19 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.util.ArrayList;
-import java.util.Collections;
 
 public class TetrisGame extends JPanel {
 
     private static final long serialVersionUID = -8715353373678321308L;
 
-    private long score;
-    private static Color[][] well;
+    static Color[][] well;
     private boolean gameStarted = false;
-
+    
+    /**
+     * This method instantiates the game board
+     */
     private void initialize() {
+    	TetrisLogic logic = new TetrisLogic();
         well = new Color[12][24];
         for (int i = 0; i < 12; i++) {
             for (int j = 0; j < 23; j++) {
@@ -41,13 +42,16 @@ public class TetrisGame extends JPanel {
                 }
             }
         }
-        score = 0; // Reset the score
+        logic.score = 0; // Reset the score
         Tetrominoes.nextPieces.clear(); // Clear upcoming pieces
         Tetrominoes tetrominoes = new Tetrominoes();
 		tetrominoes.newPiece();
     } // initialize()
-
-    // Make the dropping piece part of the well
+    
+    /**
+     * This methods adds the current piece to part of the well by checking
+     * collision
+     */
     public static void fixToBoarder() {
     	TetrisLogic logic = new TetrisLogic();
         for (Point p : Tetrominoes.tetrominoes[Tetrominoes.currentPiece]
@@ -55,49 +59,15 @@ public class TetrisGame extends JPanel {
             well[logic.pieceOrigin.x + p.x][logic.pieceOrigin.y + p.y] =
             		Tetrominoes.tetrominoColors[Tetrominoes.currentPiece];
         }
-        clearRows();
+        logic.clearRows();
         Tetrominoes newPiece = new Tetrominoes();
         newPiece.newPiece();
     } // fixToBoarder()
-
-    // Clear completed rows
-    public static void clearRows() {
-        boolean gap;
-        int numClears = 0;
-        Tetrominoes rows = new Tetrominoes();
-
-        for (int j = 21; j > 0; j--) {
-            gap = false;
-            for (int i = 1; i < 11; i++) {
-                if (well[i][j] == Color.BLACK) {
-                    gap = true;
-                    break;
-                }
-            }
-            if (!gap) {
-            	deleteRow(j);
-                j += 1;
-                numClears += 1;
-            }
-        }
-
-        switch (numClears) {
-            case 1:
-                score += 100;
-                break;
-            case 2:
-                score += 300;
-                break;
-            case 3:
-                score += 500;
-                break;
-            case 4:
-                score += 800;
-                break;
-        }
-    } // clearRows()
-
-    // Delete a row after clearing it
+    
+    /**
+     * This method deletes a row after clearing it
+     * @param row: keeps track of the current row
+     */
     public static void deleteRow(int row) {
         for (int j = row - 1; j > 0; j--) {
             for (int i = 1; i < 11; i++) {
@@ -105,8 +75,14 @@ public class TetrisGame extends JPanel {
             }
         }
     } // deleteRow()
-
-    // Check for collision at a given position and rotation
+    
+    /**
+     * This method checks for collision at a given position and rotation
+     * @param x: value of the current piece at the x axis
+     * @param y: value of the current piece at the y value
+     * @param rotation: value of the current pieces' rotation
+     * @return boolean
+     */
     protected static boolean checkForCollision(int x, int y, int rotation) {
         for (Point p : Tetrominoes.tetrominoes[Tetrominoes.currentPiece]
         														   [rotation]) {
@@ -116,8 +92,11 @@ public class TetrisGame extends JPanel {
         }
         return false;
     } // checkForCollision()
-
-    // Draw the falling piece
+    
+    /**
+     * This method draws the falling piece
+     * @param g
+     */
     private void drawPiece(Graphics g) {
     	TetrisLogic logic = new TetrisLogic();
         for (Point p : Tetrominoes.tetrominoes[Tetrominoes.currentPiece]
@@ -127,10 +106,16 @@ public class TetrisGame extends JPanel {
             		* (logic.pieceOrigin.y + p.y), 25, 25);
         }
     } // drawPiece()
-
+    
+    /**
+     * This methods draws all the components on the game board
+     * @param g
+     */
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
+        
+        TetrisLogic logic = new TetrisLogic();
 
         // Draw the grid background
         drawGridBackground(g);
@@ -147,7 +132,7 @@ public class TetrisGame extends JPanel {
             }
 
             g.setColor(Color.WHITE);
-            g.drawString("Score: " + score, 26 * 13, 25);
+            g.drawString("Score: " + logic.score, 26 * 13, 25);
 
             // Draw the current falling piece
             drawPiece(g);
@@ -158,7 +143,7 @@ public class TetrisGame extends JPanel {
     } // paintComponent()
     
     /**
-     * This method draws the background of the 
+     * This method draws the background of the game board
      * @param g
      */
     private void drawGridBackground(Graphics g) {
@@ -203,9 +188,8 @@ public class TetrisGame extends JPanel {
      */
     private void drawNextPiece(Graphics g) {
     	// Get the next piece
-    	Tetrominoes nextPieces = new Tetrominoes();
-        int nextPiece = nextPieces.nextPieces.isEmpty()
-        			? 0 : nextPieces.nextPieces.get(0);
+        int nextPiece = Tetrominoes.nextPieces.isEmpty()
+        			? 0 : Tetrominoes.nextPieces.get(0);
         g.setColor(Color.WHITE);
         g.drawString("Next Piece:", 26 * 13, 50);
 
@@ -250,6 +234,7 @@ public class TetrisGame extends JPanel {
         final TetrisGame game = new TetrisGame();
         game.initialize();
         Tetrominoes gamePieces = new Tetrominoes();
+        TetrisLogic logic = new TetrisLogic();
 
         // Set layout for adding components
         frame.setLayout(new BorderLayout());
@@ -293,7 +278,7 @@ public class TetrisGame extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 game.gameStarted = true;
-                game.score = 0;
+                logic.score = 0;
                 game.initialize();
                 game.repaint();
             }
