@@ -5,9 +5,14 @@
  * Assignment: tetrisGameCS250GroupProject
  * Goals: Implement the classic Tetris game with a GUI, controls, scoring, and
  * 	 	  title screen.
- * Inputs: Keys: 
+ * Inputs: Keys: Space (drop piece down), Left Arrow (move piece left), Right
+ * 				 Arrow (move piece right), Up Arrow (rotate piece clockwise),
+ * 				 Down Arrow (rotate piece counter-clockwise)
  * Outputs: Tetris game screen with falling pieces and score display.
- * Packages: javax.swing, java.awt, java.awt.event
+ * Packages: javax.swing, java.awt, java.awt.event.ActionEvent,
+ * 			 java.awt.event.ActionListener, java.awt.event.KeyAdapter,
+ * 			 java.awt.event.KeyEvent, java.util.ArrayList,
+ * 			 java.util.Collections, java.util.List
  * Algorithms: Collision detection, row clearing, piece rotation, and piece
  * 			   movement.
  */
@@ -112,7 +117,9 @@ public class TetrisGame extends JPanel {
         newPiece();
     } // initialize()
 
-    // Create a new piece
+    /**
+     * This method creates a new piece on the game board
+     */
     public void newPiece() {
     	pieceOrigin = new Point(5, 2);
         rotation = 0;
@@ -129,7 +136,10 @@ public class TetrisGame extends JPanel {
         }
     } // newPiece()
 
-    // Rotate the piece
+    /**
+     * This method rotates the piece on the game board
+     * @param i: value of the pieces' current rotation
+     */
     public void rotate(int i) {
         int newRotation = (rotation + i) % 4;
         if (newRotation < 0) {
@@ -141,7 +151,10 @@ public class TetrisGame extends JPanel {
         repaint();
     } // rotate()
 
-    // Move the piece
+    /**
+     * This method moves the piece left, right, and down on the game board
+     * @param i: coordinate value of the current piece
+     */
     public void movePiece(int i) {
         if (!checkForCollision(pieceOrigin.x + i, pieceOrigin.y, rotation)) {
             pieceOrigin.x += i;
@@ -149,7 +162,9 @@ public class TetrisGame extends JPanel {
         repaint();
     } // movePiece()
 
-    // Drop the piece down
+    /**
+     * This method drops the piece down on the game board
+     */
     public void dropPieceDown() {
         if (!checkForCollision(pieceOrigin.x, pieceOrigin.y + 1, rotation)) {
             pieceOrigin.y += 1;
@@ -159,7 +174,10 @@ public class TetrisGame extends JPanel {
         repaint();
     } // dropPieceDown()
 
-    // Make the dropping piece part of the well
+    /**
+     * This method checks for collision between the current piece and the well,
+     * and makes the dropping piece part of the well if it cannot move anymore
+     */
     public void fixToBoarder() {
         for (Point p : tetrominoes[currentPiece][rotation]) {
             well[pieceOrigin.x + p.x][pieceOrigin.y + p.y] =
@@ -169,7 +187,9 @@ public class TetrisGame extends JPanel {
         newPiece();
     } // fixToBoarder()
 
-    // Clear completed rows
+    /**
+     * This method clears completed rows
+     */
     public void clearRows() {
     	boolean gap;
         int numClears = 0;
@@ -210,7 +230,10 @@ public class TetrisGame extends JPanel {
         repaint();
     } // clearRows()
 
-    // Delete a row after clearing it
+    /**
+     * This method deletes a row after clearing it
+     * @param row: index of the row to be cleared
+     */
     public void deleteRow(int row) {
         for (int j = row - 1; j > 0; j--) {
             for (int i = 1; i < 11; i++) {
@@ -219,7 +242,13 @@ public class TetrisGame extends JPanel {
         }
     } // deleteRow()
 
-    // Check for collision at a given position and rotation
+    /**
+     * This method checks for collision at a given position and rotation
+     * @param x: x-value of the current piece
+     * @param y: y-value of the current piece
+     * @param rotation: rotation value of the current piece
+     * @return boolean
+     */
     public boolean checkForCollision(int x, int y, int rotation) {
         for (Point p : tetrominoes[currentPiece][rotation]) {
             if (well[x + p.x][y + p.y] != Color.BLACK) {
@@ -229,7 +258,10 @@ public class TetrisGame extends JPanel {
         return false;
     } // checkForCollision()
 
-    // Draw the falling piece
+    /**
+     * This method draws the falling piece
+     * @param g
+     */
     private void drawPiece(Graphics g) {
         for (Point p : tetrominoes[currentPiece][rotation]) {
             g.setColor(tetrominoColors[currentPiece]);
@@ -238,6 +270,10 @@ public class TetrisGame extends JPanel {
         }
     } // drawPiece()
 
+    /**
+     * This method paints the components on the frame
+     * @param g
+     */
     @Override
     public void paintComponent(Graphics g) {
     	super.paintComponent(g);
@@ -342,17 +378,6 @@ public class TetrisGame extends JPanel {
         g.drawString("Press Space to Drop", 60, 180);
         g.drawString("Press Enter to Start", 60, 210);
     } // showTitleScreen()
-    
-    
-    /**
-     * Handle game-over state
-     */
-    private void handleGameOver() {
-        gameStarted = false; // Stop the game loop
-        JOptionPane.showMessageDialog(this, 
-            "Game Over! Your score: " + score + "\nPress Restart to play again.",
-            "Game Over", JOptionPane.INFORMATION_MESSAGE);
-    } // handleGameOver()
     
     /**
      * This method prompts the player to enter their name after the game over
