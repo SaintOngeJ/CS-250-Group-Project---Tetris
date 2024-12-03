@@ -15,12 +15,15 @@ package tetrisGameCS250GroupProject;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.*;
+import java.util.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 public class TetrisGame extends JPanel {
 
@@ -91,6 +94,8 @@ public class TetrisGame extends JPanel {
     private long score;
     private Color[][] well;
     private boolean gameStarted = false;
+    private final String leaderboardFile = "leaderboard.txt";
+    private List<String> leaderboard = new ArrayList<>();
 
     private void initialize() {
         well = new Color[12][24];
@@ -110,7 +115,7 @@ public class TetrisGame extends JPanel {
 
     // Create a new piece
     public void newPiece() {
-        pieceOrigin = new Point(5, 2);
+    	pieceOrigin = new Point(5, 2);
         rotation = 0;
         if (nextPieces.isEmpty()) {
             Collections.addAll(nextPieces, 0, 1, 2, 3, 4, 5, 6);
@@ -118,6 +123,11 @@ public class TetrisGame extends JPanel {
         }
         currentPiece = nextPieces.get(0);
         nextPieces.remove(0);
+
+        // Game over check
+        if (checkForCollision(pieceOrigin.x, pieceOrigin.y, rotation)) {
+            gameOver();
+        }
     } // newPiece()
 
     // Rotate the piece
@@ -162,38 +172,43 @@ public class TetrisGame extends JPanel {
 
     // Clear completed rows
     public void clearRows() {
-        boolean gap;
+    	boolean gap;
         int numClears = 0;
 
+        // Iterate through the rows from bottom to top
         for (int j = 21; j > 0; j--) {
             gap = false;
-            for (int i = 1; i < 11; i++) {
+            for (int i = 1; i < 11; i++) { // Check all cells in the row
                 if (well[i][j] == Color.BLACK) {
-                    gap = true;
+                    gap = true; // Found an empty cell, not a full row
                     break;
                 }
             }
-            if (!gap) {
+            if (!gap) { // If the row is full
                 deleteRow(j);
-                j += 1;
-                numClears += 1;
+                j++; // Recheck the same row index as rows above shift down
+                numClears++;
             }
         }
 
+        // Add points based on the number of cleared rows
         switch (numClears) {
             case 1:
-                score += 100;
+                score += 100; // Single row
                 break;
             case 2:
-                score += 300;
+                score += 300; // Double row
                 break;
             case 3:
-                score += 500;
+                score += 500; // Triple row
                 break;
             case 4:
-                score += 800;
+                score += 800; // Tetris!
                 break;
         }
+
+        // Repaint to update the score display
+        repaint();
     } // clearRows()
 
     // Delete a row after clearing it
@@ -226,13 +241,13 @@ public class TetrisGame extends JPanel {
 
     @Override
     public void paintComponent(Graphics g) {
-        super.paintComponent(g);
+    	super.paintComponent(g);
 
-        // Draw the grid background
         drawGridBackground(g);
 
         if (!gameStarted) {
             showTitleScreen(g);
+            drawLeaderboard(g); // Draw leaderboard on title screen
         } else {
             // Paint the well and game elements
             for (int i = 0; i < 12; i++) {
@@ -245,11 +260,8 @@ public class TetrisGame extends JPanel {
             g.setColor(Color.WHITE);
             g.drawString("Score: " + score, 26 * 13, 25);
 
-            // Draw the current falling piece
-            drawPiece(g);
-
-            // Draw the "Next Piece" and controls
-            drawNextPiece(g);
+            drawPiece(g);      // Draw the falling piece
+            drawNextPiece(g);  // Draw the "Next Piece" and controls
         }
     } // paintComponent()
     
@@ -332,6 +344,89 @@ public class TetrisGame extends JPanel {
         g.drawString("Press Enter to Start", 60, 210);
     } // showTitleScreen()
     
+    
+    /**
+     * Handle game-over state
+     */
+    private void handleGameOver() {
+        gameStarted = false; // Stop the game loop
+        JOptionPane.showMessageDialog(this, 
+            "Game Over! Your score: " + score + "\nPress Restart to play again.",
+            "Game Over", JOptionPane.INFORMATION_MESSAGE);
+    } // handleGameOver()
+    
+    /**
+     * This method prompts the player to enter their name after the game over
+     * condition is met
+     */
+	private void gameOver() {
+		gameStarted = false;
+
+		String playerName = JOptionPane.showInputDialog(this,
+				"Game Over! Enter your name for the leaderboard:");
+		if (playerName != null && !playerName.trim().isEmpty()) {
+			leaderboard.add(playerName + " - " + score);
+			leaderboard.sort((a, b) ->
+					Integer.compare(Integer.parseInt(b.split(" - ")[1]),
+					Integer.parseInt(a.split(" - ")[1])));
+			saveLeaderboard();
+		}
+		loadLeaderboard();
+		repaint();
+	} // gameOver()
+    
+    /**
+     * This class handles the loading of the leader board
+     */
+    private void loadLeaderboard() {
+        leaderboard.clear();
+        File file = new File(leaderboardFile);
+
+        if (file.exists()) {
+            try (BufferedReader reader
+            		= new BufferedReader(new FileReader(file))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    leaderboard.add(line);
+                }
+            } catch (IOException e) {
+                System.err.println("Error reading leaderboard file: "
+                		+ e.getMessage());
+            }
+        }
+    } // loadLeaderboard()
+    
+    /**
+     * This method saves the players score to the leaderboard.txt file
+     */
+    private void saveLeaderboard() {
+        try (BufferedWriter writer
+        		= new BufferedWriter(new FileWriter(leaderboardFile))) {
+            for (String entry : leaderboard) {
+                writer.write(entry);
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            System.err.println("Error writing to leaderboard file: "
+            		+ e.getMessage());
+        }
+    } // saveLeaderboard()
+    
+    /**
+     * This method draws the leader board to the game
+     * @param g
+     */
+    private void drawLeaderboard(Graphics g) {
+        g.setColor(Color.WHITE);
+        g.drawString("Leaderboard:", 26 * 13, 250);
+
+        int y = 270;
+        for (int i = 0; i < Math.min(5, leaderboard.size()); i++) {
+            g.drawString(leaderboard.get(i), 26 * 13, y);
+            y += 20;
+        }
+    } // drawLeaderboard()
+    
     /**
      * Main method of the application
      * @param args
@@ -343,6 +438,7 @@ public class TetrisGame extends JPanel {
 
         final TetrisGame game = new TetrisGame();
         game.initialize();
+        game.loadLeaderboard();
 
         // Set layout for adding components
         frame.setLayout(new BorderLayout());
@@ -385,10 +481,9 @@ public class TetrisGame extends JPanel {
         restartButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                game.gameStarted = true;
-                game.score = 0;
-                game.initialize();
-                game.repaint();
+            	game.gameStarted = true;  // Set the game to the started state
+                game.initialize();       // Initialize the game board
+                game.repaint();          // Refresh the screen
             }
         });
         controlPanel.add(restartButton);
