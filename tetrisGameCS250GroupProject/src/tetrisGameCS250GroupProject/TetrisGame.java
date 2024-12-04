@@ -259,6 +259,36 @@ public class TetrisGame extends JPanel {
     } // checkForCollision()
 
     /**
+	 * This method paints the components on the frame
+	 * @param g
+	 */
+	@Override
+	public void paintComponent(Graphics g) {
+		super.paintComponent(g);
+	
+	    drawGridBackground(g);
+	
+	    if (!gameStarted) {
+	        showTitleScreen(g);
+	        drawLeaderboard(g); // Draw leaderboard on title screen
+	    } else {
+	        // Paint the well and game elements
+	        for (int i = 0; i < 12; i++) {
+	            for (int j = 0; j < 23; j++) {
+	                g.setColor(well[i][j]);
+	                g.fillRect(26 * i, 26 * j, 25, 25);
+	            }
+	        }
+	
+	        g.setColor(Color.WHITE);
+	        g.drawString("Score: " + score, 26 * 13, 25);
+	
+	        drawPiece(g);      // Draw the falling piece
+	        drawNextPiece(g);  // Draw the "Next Piece" and controls
+	    }
+	} // paintComponent()
+
+	/**
      * This method draws the falling piece
      * @param g
      */
@@ -270,36 +300,6 @@ public class TetrisGame extends JPanel {
         }
     } // drawPiece()
 
-    /**
-     * This method paints the components on the frame
-     * @param g
-     */
-    @Override
-    public void paintComponent(Graphics g) {
-    	super.paintComponent(g);
-
-        drawGridBackground(g);
-
-        if (!gameStarted) {
-            showTitleScreen(g);
-            drawLeaderboard(g); // Draw leaderboard on title screen
-        } else {
-            // Paint the well and game elements
-            for (int i = 0; i < 12; i++) {
-                for (int j = 0; j < 23; j++) {
-                    g.setColor(well[i][j]);
-                    g.fillRect(26 * i, 26 * j, 25, 25);
-                }
-            }
-
-            g.setColor(Color.WHITE);
-            g.drawString("Score: " + score, 26 * 13, 25);
-
-            drawPiece(g);      // Draw the falling piece
-            drawNextPiece(g);  // Draw the "Next Piece" and controls
-        }
-    } // paintComponent()
-    
     /**
      * This method draws the background of the 
      * @param g
@@ -400,7 +400,7 @@ public class TetrisGame extends JPanel {
 	} // gameOver()
     
     /**
-     * This class handles the loading of the leader board
+     * This class handles the loading of the leaderboard
      */
     private void loadLeaderboard() {
         leaderboard.clear();
@@ -437,7 +437,7 @@ public class TetrisGame extends JPanel {
     } // saveLeaderboard()
     
     /**
-     * This method draws the leader board to the game
+     * This method draws the leaderboard to the game
      * @param g
      */
     private void drawLeaderboard(Graphics g) {
