@@ -9,8 +9,7 @@
  * 				 Arrow (move piece right), Up Arrow (rotate piece clockwise),
  * 				 Down Arrow (rotate piece counter-clockwise)
  * Outputs: Tetris game screen with falling pieces and score display.
- * Packages: javax.swing, java.awt, java.awt.event.ActionEvent,
- * 			 java.awt.event.ActionListener, java.awt.event.KeyAdapter,
+ * Packages: javax.swing, java.awt, java.awt.event.KeyAdapter,
  * 			 java.awt.event.KeyEvent, java.util.ArrayList,
  * 			 java.util.Collections, java.util.List
  * Algorithms: Collision detection, row clearing, piece rotation, and piece
@@ -21,8 +20,6 @@ package tetrisGameCS250GroupProject;
 import javax.swing.*;
 import java.awt.*;
 import java.io.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
@@ -96,8 +93,8 @@ public class TetrisGame extends JPanel {
     private int rotation;
     private ArrayList<Integer> nextPieces = new ArrayList<>();
     private long score;
-    private int numClears;
-    private static int timer;
+    private int lineCount;
+    private static int speed;
     private Color[][] well;
     private boolean gameStarted = false;
     private final String leaderboardFile = "leaderboard.txt";
@@ -106,15 +103,15 @@ public class TetrisGame extends JPanel {
     /**
 	 * @return the timer
 	 */
-	public static int getTimer() {
-		return timer;
+	public static int getSpeed() {
+		return speed;
 	} // getTimer()
 
 	/**
 	 * @param timer the timer to set
 	 */
-	public void setTimer(int timer) {
-		TetrisGame.timer = timer;
+	public void setSpeed(int speed) {
+		TetrisGame.speed = speed;
 	} // setTimer()
 
 	private void initialize() {
@@ -129,7 +126,7 @@ public class TetrisGame extends JPanel {
             }
         }
         score = 0; // Reset the score
-        setTimer(500); // Set timer length to level one speed
+        setSpeed(1000); // Set timer length to level one speed
         nextPieces.clear(); // Clear upcoming pieces
         newPiece();
     } // initialize()
@@ -140,13 +137,16 @@ public class TetrisGame extends JPanel {
     public void newPiece() {
     	pieceOrigin = new Point(5, 2);
         rotation = 0;
+
+        // Refill the nextPieces list if empty
         if (nextPieces.isEmpty()) {
             Collections.addAll(nextPieces, 0, 1, 2, 3, 4, 5, 6);
             Collections.shuffle(nextPieces);
         }
-        currentPiece = nextPieces.get(0);
-        nextPieces.remove(0);
-        
+
+        // Set the current piece to the first piece in the list and remove it
+        currentPiece = nextPieces.remove(0);
+
         // Game over check
         if (checkForCollision(pieceOrigin.x, pieceOrigin.y, rotation)) {
             gameOver();
@@ -190,6 +190,17 @@ public class TetrisGame extends JPanel {
         }
         repaint();
     } // dropPieceDown()
+    
+    /**
+     * Instantly drops the current piece to the bottom-most valid position.
+     */
+    public void instantDrop() {
+        while (!checkForCollision(pieceOrigin.x, pieceOrigin.y + 1, rotation)) {
+            pieceOrigin.y++;
+        }
+        fixToBoarder();
+        repaint();
+    } // instantDrop()
 
     /**
      * This method checks for collision between the current piece and the well,
@@ -209,38 +220,51 @@ public class TetrisGame extends JPanel {
      */
     public void clearRows() {
     	boolean gap;
-        numClears = 0;
-        int level = 1;
+        int numClears = 0;
 
+        // Iterate through the rows from bottom to top
         for (int j = 21; j > 0; j--) {
             gap = false;
-            for (int i = 1; i < 11; i++) {
+            for (int i = 1; i < 11; i++) { // Check all cells in the row
                 if (well[i][j] == Color.BLACK) {
-                    gap = true;
+                    gap = true; // Found an empty cell, not a full row
                     break;
                 }
             }
-            if (!gap) {
+            if (!gap) { // If the row is full
                 deleteRow(j);
-                j++;
+                j++; // Recheck the same row index as rows above shift down
                 numClears++;
             }
         }
 
+        // Update the total number of lines cleared
+        lineCount += numClears;
+
+        // Increase speed (decrease interval) after every 20 rows cleared
+        int newSpeed = 1000 - (lineCount / 20) * 100; // Decrease speed after every 20 rows
+        if (newSpeed < 200) { // Set a lower limit on speed to prevent it from becoming too fast
+            newSpeed = 200;
+        }
+        speed = newSpeed; // Update the game speed
+
+        // Add points based on the number of cleared rows
         switch (numClears) {
             case 1:
-                score += 100 * level; // Single row
+                score += 100; // Single row
                 break;
             case 2:
-                score += 300 * level; // Double row
+                score += 300; // Double row
                 break;
             case 3:
-                score += 500 * level; // Triple row
+                score += 500; // Triple row
                 break;
             case 4:
-                score += 800 * level; // Tetris!
+                score += 800; // Tetris!
                 break;
         }
+
+        // Repaint to update the score display
         repaint();
     } // clearRows()
 
@@ -355,15 +379,17 @@ public class TetrisGame extends JPanel {
      * @param g
      */
     private void drawNextPiece(Graphics g) {
-    	// Get the next piece
-        int nextPiece = nextPieces.isEmpty() ? 0 : nextPieces.get(0);
-        g.setColor(Color.WHITE);
-        g.drawString("Next Piece:", 26 * 13, 50);
+    	if (!nextPieces.isEmpty()) {
+            int nextPiece = nextPieces.get(0); // Get next piece from the list
 
-        // Draw the next piece using its default rotation (0)
-        for (Point p : tetrominoes[nextPiece][0]) {
-            g.setColor(tetrominoColors[nextPiece]);
-            g.fillRect(26 * 14 + (p.x * 25), 60 + (p.y * 25), 25, 25);
+            g.setColor(Color.WHITE);
+            g.drawString("Next Piece:", 26 * 13, 50);
+
+            // Draw the next piece using its default rotation (0)
+            for (Point p : tetrominoes[nextPiece][0]) {
+                g.setColor(tetrominoColors[nextPiece]);
+                g.fillRect(26 * 14 + (p.x * 25), 60 + (p.y * 25), 25, 25);
+            }
         }
 
         // Display controls below the "Next Piece"
@@ -387,6 +413,7 @@ public class TetrisGame extends JPanel {
         g.drawString("Use Arrow Keys to Move", 60, 150);
         g.drawString("Press Space to Drop", 60, 180);
         g.drawString("Press Enter to Start", 60, 210);
+        g.drawString("Press R to restart", 60, 240);
     } // showTitleScreen()
     
     /**
@@ -468,7 +495,7 @@ public class TetrisGame extends JPanel {
     public static void main(String[] args) {
         JFrame frame = new JFrame("Tetris");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(12 * 41 + 15, 26 * 25 + 25);
+        frame.setSize(12 * 41 + 15, 26 * 25 - 13);
 
         final TetrisGame game = new TetrisGame();
         game.initialize();
@@ -482,22 +509,26 @@ public class TetrisGame extends JPanel {
         // Add a KeyListener for controlling the game
         game.addKeyListener(new KeyAdapter() {
             public void keyPressed(KeyEvent e) {
-                if (game.gameStarted) {
+            	if (e.getKeyCode() == KeyEvent.VK_R) {
+            		game.initialize();
+            		game.repaint();
+            	}
+            	else if (game.gameStarted) {
                     switch (e.getKeyCode()) {
-                        case KeyEvent.VK_UP:
+                        case KeyEvent.VK_UP: // Rotate current piece
                             game.rotate(-1);
                             break;
-                        case KeyEvent.VK_DOWN:
-                            game.rotate(1);
+                        case KeyEvent.VK_DOWN: // Soft drop current piece
+                            game.dropPieceDown();
                             break;
-                        case KeyEvent.VK_LEFT:
+                        case KeyEvent.VK_LEFT: // Move current piece left
                             game.movePiece(-1);
                             break;
-                        case KeyEvent.VK_RIGHT:
+                        case KeyEvent.VK_RIGHT: // Move current piece right
                             game.movePiece(1);
                             break;
-                        case KeyEvent.VK_SPACE:
-                            game.dropPieceDown();
+                        case KeyEvent.VK_SPACE: // Instant drop current piece
+                            game.instantDrop();
                             break;
                     }
                 } else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
@@ -506,26 +537,9 @@ public class TetrisGame extends JPanel {
                 }
             }
         });
+        
         game.setFocusable(true); // Ensure the game panel can receive key events
-
-        // Add a restart button
-        JPanel controlPanel = new JPanel();
-        controlPanel.setLayout(new FlowLayout());
-        JButton restartButton = new JButton("Restart");
-        restartButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-            	game.gameStarted = true;  // Set the game to the started state
-                game.initialize();       // Initialize the game board
-                game.repaint();          // Refresh the screen
-            }
-        });
-        controlPanel.add(restartButton);
-
-        // Add control panel to the frame
-        frame.add(controlPanel, BorderLayout.SOUTH);
-
-        frame.setVisible(true);
+        frame.setVisible(true); // Ensure the frame is visible
 
         // Run the game loop
         new Thread() {
@@ -534,7 +548,7 @@ public class TetrisGame extends JPanel {
                 while (true) {
                     try {
                         if (game.gameStarted) {
-                            Thread.sleep(getTimer());
+                            Thread.sleep(getSpeed());
                             game.dropPieceDown();
                         } else {
                             Thread.sleep(100);
