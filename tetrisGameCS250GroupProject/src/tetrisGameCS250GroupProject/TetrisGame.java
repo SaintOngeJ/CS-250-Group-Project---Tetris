@@ -9,21 +9,17 @@
  * 				 Arrow (move piece right), Up Arrow (rotate piece clockwise),
  * 				 Down Arrow (rotate piece counter-clockwise)
  * Outputs: Tetris game screen with falling pieces and score display.
- * Packages: javax.swing, java.awt, java.awt.event.ActionEvent,
- * 			 java.awt.event.ActionListener, java.awt.event.KeyAdapter,
+ * Packages: javax.swing, java.awt, java.awt.event.KeyAdapter,
  * 			 java.awt.event.KeyEvent, java.util.ArrayList,
  * 			 java.util.Collections, java.util.List
  * Algorithms: Collision detection, row clearing, piece rotation, and piece
  * 			   movement.
  */
-
 package tetrisGameCS250GroupProject;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
@@ -88,13 +84,8 @@ public class TetrisGame extends JPanel {
     };
 
     private final Color[] tetrominoColors = {
-    	    Color.cyan, // Cyan color
-    	    Color.blue, // Blue color
-    	    new Color(255, 140, 0), // Custom orange color
-    	    Color.yellow, // Yellow color
-    	    Color.green, // Green color
-    	    Color.MAGENTA, // Magenta color
-    	    Color.red // Red color
+            Color.cyan, Color.blue, Color.orange, Color.yellow, Color.green,
+            Color.pink, Color.red
     };
 
     private Point pieceOrigin;
@@ -102,16 +93,28 @@ public class TetrisGame extends JPanel {
     private int rotation;
     private ArrayList<Integer> nextPieces = new ArrayList<>();
     private long score;
+    private int lineCount;
+    private static int speed;
     private Color[][] well;
     private boolean gameStarted = false;
     private final String leaderboardFile = "leaderboard.txt";
     private List<String> leaderboard = new ArrayList<>();
-    private int level = 1;
-    private int linesCleared = 0;
-    
-    private Timer timer; //controls game tick speed
 
-    private void initialize() {
+    /**
+	 * @return the timer
+	 */
+	public static int getSpeed() {
+		return speed;
+	} // getTimer()
+
+	/**
+	 * @param timer the timer to set
+	 */
+	public void setSpeed(int speed) {
+		TetrisGame.speed = speed;
+	} // setTimer()
+
+	private void initialize() {
         well = new Color[12][24];
         for (int i = 0; i < 12; i++) {
             for (int j = 0; j < 23; j++) {
@@ -123,16 +126,9 @@ public class TetrisGame extends JPanel {
             }
         }
         score = 0; // Reset the score
-        level = 1; //starts at 1 but this is the level 
-        linesCleared = 0; //determines the amount of lines cleared
+        setSpeed(1000); // Set timer length to level one speed
         nextPieces.clear(); // Clear upcoming pieces
         newPiece();
-        
-        if(timer != null) {
-        	timer.stop();
-        }
-        timer = new Timer(1000 - (level - 1) * 100, e -> dropPieceDown());
-        timer.start();
     } // initialize()
 
     /**
@@ -141,12 +137,15 @@ public class TetrisGame extends JPanel {
     public void newPiece() {
     	pieceOrigin = new Point(5, 2);
         rotation = 0;
+
+        // Refill the nextPieces list if empty
         if (nextPieces.isEmpty()) {
             Collections.addAll(nextPieces, 0, 1, 2, 3, 4, 5, 6);
             Collections.shuffle(nextPieces);
         }
-        currentPiece = nextPieces.get(0);
-        nextPieces.remove(0);
+
+        // Set the current piece to the first piece in the list and remove it
+        currentPiece = nextPieces.remove(0);
 
         // Game over check
         if (checkForCollision(pieceOrigin.x, pieceOrigin.y, rotation)) {
@@ -159,7 +158,7 @@ public class TetrisGame extends JPanel {
      * @param i: value of the pieces' current rotation
      */
     public void rotate(int i) {
-        int newRotation = (rotation + i) % 4;
+    	int newRotation = (rotation + i) % 4;
         if (newRotation < 0) {
             newRotation = 3;
         }
@@ -184,22 +183,33 @@ public class TetrisGame extends JPanel {
      * This method drops the piece down on the game board
      */
     public void dropPieceDown() {
-        if (!checkForCollision(pieceOrigin.x, pieceOrigin.y + 1, rotation)) {
+    	if (!checkForCollision(pieceOrigin.x, pieceOrigin.y + 1, rotation)) {
             pieceOrigin.y += 1;
         } else {
             fixToBoarder();
         }
         repaint();
     } // dropPieceDown()
+    
+    /**
+     * Instantly drops the current piece to the bottom-most valid position.
+     */
+    public void instantDrop() {
+        while (!checkForCollision(pieceOrigin.x, pieceOrigin.y + 1, rotation)) {
+            pieceOrigin.y++;
+        }
+        fixToBoarder();
+        repaint();
+    } // instantDrop()
 
     /**
      * This method checks for collision between the current piece and the well,
      * and makes the dropping piece part of the well if it cannot move anymore
      */
     public void fixToBoarder() {
-        for (Point p : tetrominoes[currentPiece][rotation]) {
+    	for (Point p : tetrominoes[currentPiece][rotation]) {
             well[pieceOrigin.x + p.x][pieceOrigin.y + p.y] =
-            		tetrominoColors[currentPiece];
+                    tetrominoColors[currentPiece];
         }
         clearRows();
         newPiece();
@@ -227,13 +237,16 @@ public class TetrisGame extends JPanel {
                 numClears++;
             }
         }
-        linesCleared += numClears;
-        
-        //level up every 10 line cleared
-        if (linesCleared >= level * 10) {
-            level++;
-            timer.setDelay(Math.max(100, 1000 - (level - 1) * 100)); // Increase speed
+
+        // Update the total number of lines cleared
+        lineCount += numClears;
+
+        // Increase speed (decrease interval) after every 20 rows cleared
+        int newSpeed = 1000 - (lineCount / 20) * 100; // Decrease speed after every 20 rows
+        if (newSpeed < 200) { // Set a lower limit on speed to prevent it from becoming too fast
+            newSpeed = 200;
         }
+        speed = newSpeed; // Update the game speed
 
         // Add points based on the number of cleared rows
         switch (numClears) {
@@ -250,7 +263,6 @@ public class TetrisGame extends JPanel {
                 score += 800; // Tetris!
                 break;
         }
-        
 
         // Repaint to update the score display
         repaint();
@@ -261,7 +273,7 @@ public class TetrisGame extends JPanel {
      * @param row: index of the row to be cleared
      */
     public void deleteRow(int row) {
-        for (int j = row - 1; j > 0; j--) {
+    	for (int j = row - 1; j > 0; j--) {
             for (int i = 1; i < 11; i++) {
                 well[i][j + 1] = well[i][j];
             }
@@ -275,8 +287,8 @@ public class TetrisGame extends JPanel {
      * @param rotation: rotation value of the current piece
      * @return boolean
      */
-    public     boolean checkForCollision(int x, int y, int rotation) {
-        for (Point p : tetrominoes[currentPiece][rotation]) {
+    public boolean checkForCollision(int x, int y, int rotation) {
+    	for (Point p : tetrominoes[currentPiece][rotation]) {
             if (well[x + p.x][y + p.y] != Color.BLACK) {
                 return true;
             }
@@ -291,27 +303,23 @@ public class TetrisGame extends JPanel {
 	@Override
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g);
-	
-	    drawGridBackground(g);
-	
-	    if (!gameStarted) {
-	        showTitleScreen(g);
-	        drawLeaderboard(g); // Draw leaderboard on title screen
-	    } else {
-	        // Paint the well and game elements
-	        for (int i = 0; i < 12; i++) {
-	            for (int j = 0; j < 23; j++) {
-	                g.setColor(well[i][j]);
-	                g.fillRect(26 * i, 26 * j, 25, 25);
-	            }
-	        }
-	
-	        g.setColor(Color.black);
-	        g.drawString("Score: " + score, 26 * 13, 25);
-	
-	        drawPiece(g);      // Draw the falling piece
-	        drawNextPiece(g);  // Draw the "Next Piece" and controls
-	    }
+        drawGridBackground(g);
+
+        if (!gameStarted) {
+            showTitleScreen(g);
+            drawLeaderboard(g); // Draw the leaderboard on the title screen
+        } else {
+            for (int i = 0; i < 12; i++) {
+                for (int j = 0; j < 23; j++) {
+                    g.setColor(well[i][j]);
+                    g.fillRect(26 * i, 26 * j, 25, 25);
+                }
+            }
+            g.setColor(Color.WHITE);
+            g.drawString("Score: " + score, 26 * 13, 25);
+            drawPiece(g); // Draw the current piece on the game board
+            drawNextPiece(g); // Draw the next piece
+        }
 	} // paintComponent()
 
 	/**
@@ -331,28 +339,37 @@ public class TetrisGame extends JPanel {
      * @param g
      */
     private void drawGridBackground(Graphics g) {
-        int totalWidth = 10 * 26; // Total width with extra column
-        int totalHeight = 20 * 26;
+        int totalWidth = 19 * 26; // Total width with extra column
+        int totalHeight = 23 * 26;
 
         // Define the bounds for the text area
         // Start of the "Next Piece" column
-        int textAreaStartX = 10 * 26; 
+        int textAreaStartX = 13 * 26; 
         // End of the original panel before the extra column
         int textAreaEndX = 18 * 26;   
         // Top of the panel
         int textAreaStartY = 0;       
         // Height to cover text (arbitrary height to fit all text)
-        int textAreaEndY = 240;       
+        int textAreaEndY = 230;       
         // Draw grid cells
         for (int x = 0; x < totalWidth; x += 26) {
             for (int y = 0; y < totalHeight; y += 26) {
-                if (x >= textAreaStartX && x < textAreaEndX
-                    && y >= textAreaStartY && y < textAreaEndY) {
-                    g.setColor(Color.BLACK); // Text area background
+                if (x == 18 * 26) {
+                    // Extra rightmost column: fill entirely with grey
+                    g.setColor(Color.GRAY);
+                } else if (x >= textAreaStartX && x < textAreaEndX
+                		&& y >= textAreaStartY && y < textAreaEndY) {
+                    // Text area: fill with black
+                    g.setColor(Color.BLACK);
                 } else {
-                    g.setColor(Color.BLACK); // Background color for the play area
+                    // Normal grid: fill with grey
+                    g.setColor(Color.GRAY);
                 }
-                g.fillRect(x, y, 25, 25); // Fill the cell
+                g.fillRect(x, y, 25, 25);
+
+                // Draw grid lines
+                g.setColor(Color.LIGHT_GRAY);
+                g.drawRect(x, y, 25, 25);
             }
         }
     } // drawGridBackground()
@@ -362,98 +379,80 @@ public class TetrisGame extends JPanel {
      * @param g
      */
     private void drawNextPiece(Graphics g) {
-    	// Get the next piece
-        int nextPiece = nextPieces.isEmpty() ? 0 : nextPieces.get(0);
-        g.setColor(Color.black);
-        g.drawString("Next Piece:", 26 * 13, 50);
+    	if (!nextPieces.isEmpty()) {
+            int nextPiece = nextPieces.get(0); // Get next piece from the list
 
-        // Draw the next piece using its default rotation (0)
-        for (Point p : tetrominoes[nextPiece][0]) {
-            g.setColor(tetrominoColors[nextPiece]);
-            g.fillRect(26 * 14 + (p.x * 25), 60 + (p.y * 25), 25, 25);
+            g.setColor(Color.CYAN);
+            g.drawString("Next Piece:", 26 * 13, 50);
+
+            // Draw the next piece using its default rotation (0)
+            for (Point p : tetrominoes[nextPiece][0]) {
+                g.setColor(tetrominoColors[nextPiece]);
+                g.fillRect(26 * 14 + (p.x * 25), 60 + (p.y * 25), 25, 25);
+            }
         }
 
         // Display controls below the "Next Piece"
-        g.setColor(Color.black);
-        g.setFont(new Font("Arial", Font.PLAIN, 15));
+        g.setColor(Color.CYAN);
         g.drawString("Controls:Arrow Keys", 26 * 13, 150);
         g.drawString("Left & Right: Move", 26 * 13, 170);
         g.drawString("Up & Down: Rotate", 26 * 13, 190);
         g.drawString("Space: Drop", 26 * 13, 210);
-        g.drawString("Level: " + level, 26 * 13, 230); // display level
-        g.drawString("Press R to Restart", 26 * 13, 250);
     } // drawNextPiece()
-    protected void processKeyEvent(KeyEvent e) {
-        super.processKeyEvent(e);
-        if (e.getID() == KeyEvent.KEY_PRESSED) {
-            switch (e.getKeyCode()) {
-                case KeyEvent.VK_R: // Restart game
-                    initialize();
-                    gameStarted = true;
-                    repaint();
-                    break;
-                // Other controls...
-            }
-        }
-    }
+    
     /**
      * Title screen drawing method
      * @param g
      */
     private void showTitleScreen(Graphics g) {
-        // Title and "Press Enter to Start" in white
-        g.setColor(Color.white);
-        g.setFont(new Font("Arial", Font.PLAIN, 15));
+        g.setColor(Color.CYAN);
+        g.setFont(new Font("Arial", Font.BOLD, 50));
         g.drawString("TETRIS", 75, 100);
-        g.drawString("Press Enter to Start", 60, 210);
 
-        // Other instructions in black
-        g.setColor(Color.white);
-        g.setFont(new Font("Arial", Font.PLAIN, 15));
+        g.setFont(new Font("Arial", Font.PLAIN, 20));
         g.drawString("Use Arrow Keys to Move", 60, 150);
         g.drawString("Press Space to Drop", 60, 180);
-    }// showTitleScreen()
+        g.drawString("Press Enter to Start", 60, 210);
+        g.drawString("Press R to restart", 60, 240);
+    } // showTitleScreen()
     
     /**
      * This method prompts the player to enter their name after the game over
      * condition is met
      */
 	private void gameOver() {
-	    // Ensure game over logic executes only once
-	    if (!gameStarted) return;
+		gameStarted = false;
 
-	    gameStarted = false; // Mark the game as stopped
-	    String playerName = JOptionPane.showInputDialog(this,
-	            "Game Over! Enter your name for the leaderboard:");
-	    
-		if (playerName != null && !playerName.trim().isEmpty()) {
-			leaderboard.add(playerName + " - " + score);
-			leaderboard.sort((a, b) ->
-					Integer.compare(Integer.parseInt(b.split(" - ")[1]),
-					Integer.parseInt(a.split(" - ")[1])));
-			saveLeaderboard();
-		}
-		loadLeaderboard();
-		repaint();
+        String playerName = JOptionPane.showInputDialog(this,
+                "Game Over! Enter your name for the leaderboard:");
+        if (playerName != null && !playerName.trim().isEmpty()) {
+            leaderboard.add(playerName + " - " + score);
+            leaderboard.sort((a, b) ->
+                    Integer.compare(Integer.parseInt(b.split(" - ")[1]),
+                    Integer.parseInt(a.split(" - ")[1])));
+            saveLeaderboard();
+        }
+        loadLeaderboard();
+        repaint();
 	} // gameOver()
     
     /**
      * This class handles the loading of the leaderboard
      */
     private void loadLeaderboard() {
-        leaderboard.clear();
+    	leaderboard.clear();
         File file = new File(leaderboardFile);
 
         if (file.exists()) {
             try (BufferedReader reader
-            		= new BufferedReader(new FileReader(file))) {
+                     = new BufferedReader(new FileReader(file))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     leaderboard.add(line);
                 }
             } catch (IOException e) {
                 System.err.println("Error reading leaderboard file: "
-                		+ e.getMessage());
+                        + e.getMessage());
             }
         }
     } // loadLeaderboard()
@@ -462,16 +461,16 @@ public class TetrisGame extends JPanel {
      * This method saves the players score to the leaderboard.txt file
      */
     private void saveLeaderboard() {
-        try (BufferedWriter writer
-        		= new BufferedWriter(new FileWriter(leaderboardFile))) {
-            for (String entry : leaderboard) {
-                writer.write(entry);
-                writer.newLine();
-            }
-        } catch (IOException e) {
-            System.err.println("Error writing to leaderboard file: "
-            		+ e.getMessage());
-        }
+		try (BufferedWriter writer
+				= new BufferedWriter(new FileWriter(leaderboardFile))) {
+			for (String entry : leaderboard) {
+				writer.write(entry);
+				writer.newLine();
+			}
+		} catch (IOException e) {
+			System.err.println("Error writing to leaderboard file: "
+					+ e.getMessage());
+		}
     } // saveLeaderboard()
     
     /**
@@ -479,7 +478,7 @@ public class TetrisGame extends JPanel {
      * @param g
      */
     private void drawLeaderboard(Graphics g) {
-        g.setColor(Color.DARK_GRAY);
+    	g.setColor(Color.CYAN);
         g.drawString("Leaderboard:", 26 * 13, 250);
 
         int y = 270;
@@ -493,18 +492,10 @@ public class TetrisGame extends JPanel {
      * Main method of the application
      * @param args
      */
-    public void startGame() {
-        // Reset the game state
-        gameStarted = true;
-        initialize();  // Set up the well and other initial conditions
-        newPiece();    // Generate the first piece
-        repaint();     // Refresh the game screen
-    }
-    
     public static void main(String[] args) {
         JFrame frame = new JFrame("Tetris");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(12 * 41 + 15, 26 * 25 + 25);
+        frame.setSize(12 * 41 + 15, 26 * 25 - 13);
 
         final TetrisGame game = new TetrisGame();
         game.initialize();
@@ -518,52 +509,37 @@ public class TetrisGame extends JPanel {
         // Add a KeyListener for controlling the game
         game.addKeyListener(new KeyAdapter() {
             public void keyPressed(KeyEvent e) {
-                if (game.gameStarted) {
+            	if (e.getKeyCode() == KeyEvent.VK_R) {
+            		game.initialize();
+            		game.repaint();
+            	}
+            	else if (game.gameStarted) {
                     switch (e.getKeyCode()) {
-                        case KeyEvent.VK_UP:
+                        case KeyEvent.VK_UP: // Rotate current piece
                             game.rotate(-1);
                             break;
-                        case KeyEvent.VK_DOWN:
-                            game.rotate(1);
-                            break;
-                        case KeyEvent.VK_LEFT:
-                            game.movePiece(-1);
-                            break;
-                        case KeyEvent.VK_RIGHT:
-                            game.movePiece(1);
-                            break;
-                        case KeyEvent.VK_SPACE:
+                        case KeyEvent.VK_DOWN: // Soft drop current piece
                             game.dropPieceDown();
                             break;
-                       }
+                        case KeyEvent.VK_LEFT: // Move current piece left
+                            game.movePiece(-1);
+                            break;
+                        case KeyEvent.VK_RIGHT: // Move current piece right
+                            game.movePiece(1);
+                            break;
+                        case KeyEvent.VK_SPACE: // Instant drop current piece
+                            game.instantDrop();
+                            break;
+                    }
                 } else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
                     game.gameStarted = true;
-                    game.startGame(); // Call the method to start the game logic
-                    game.repaint();    // Repaint the screen to update the display
+                    game.repaint();
                 }
             }
         });
-
+        
         game.setFocusable(true); // Ensure the game panel can receive key events
-
-        // Add a restart button
-        JPanel controlPanel = new JPanel();
-        controlPanel.setLayout(new FlowLayout());
-        JButton restartButton = new JButton("Restart");
-        restartButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-            	game.gameStarted = true;  // Set the game to the started state
-                game.initialize();       // Initialize the game board
-                game.repaint();          // Refresh the screen
-            }
-        });
-        controlPanel.add(restartButton);
-
-        // Add control panel to the frame
-        frame.add(controlPanel, BorderLayout.SOUTH);
-
-        frame.setVisible(true);
+        frame.setVisible(true); // Ensure the frame is visible
 
         // Run the game loop
         new Thread() {
@@ -572,7 +548,7 @@ public class TetrisGame extends JPanel {
                 while (true) {
                     try {
                         if (game.gameStarted) {
-                            Thread.sleep(500);
+                            Thread.sleep(getSpeed());
                             game.dropPieceDown();
                         } else {
                             Thread.sleep(100);
