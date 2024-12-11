@@ -382,7 +382,7 @@ public class TetrisGame extends JPanel {
     	if (!nextPieces.isEmpty()) {
             int nextPiece = nextPieces.get(0); // Get next piece from the list
 
-            g.setColor(Color.WHITE);
+            g.setColor(Color.CYAN);
             g.drawString("Next Piece:", 26 * 13, 50);
 
             // Draw the next piece using its default rotation (0)
@@ -393,7 +393,7 @@ public class TetrisGame extends JPanel {
         }
 
         // Display controls below the "Next Piece"
-        g.setColor(Color.WHITE);
+        g.setColor(Color.CYAN);
         g.drawString("Controls:Arrow Keys", 26 * 13, 150);
         g.drawString("Left & Right: Move", 26 * 13, 170);
         g.drawString("Up & Down: Rotate", 26 * 13, 190);
@@ -405,7 +405,7 @@ public class TetrisGame extends JPanel {
      * @param g
      */
     private void showTitleScreen(Graphics g) {
-        g.setColor(Color.WHITE);
+        g.setColor(Color.CYAN);
         g.setFont(new Font("Arial", Font.BOLD, 50));
         g.drawString("TETRIS", 75, 100);
 
@@ -478,7 +478,7 @@ public class TetrisGame extends JPanel {
      * @param g
      */
     private void drawLeaderboard(Graphics g) {
-    	g.setColor(Color.WHITE);
+    	g.setColor(Color.CYAN);
         g.drawString("Leaderboard:", 26 * 13, 250);
 
         int y = 270;
