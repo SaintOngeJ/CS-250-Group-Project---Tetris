@@ -206,7 +206,7 @@ public class TetrisGame extends JPanel {
     } // fixToBoarder()
 
     /**
-     * This method clears completed rows and calculates score
+     * This method clears completed rows
      */
     public void clearRows() {
     	boolean gap;
@@ -273,7 +273,7 @@ public class TetrisGame extends JPanel {
      * @param x: x-value of the current piece
      * @param y: y-value of the current piece
      * @param rotation: rotation value of the current piece
-     * @return boolean true or false
+     * @return boolean
      */
     public     boolean checkForCollision(int x, int y, int rotation) {
         for (Point p : tetrominoes[currentPiece][rotation]) {
@@ -291,7 +291,6 @@ public class TetrisGame extends JPanel {
 	@Override
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g);
-<<<<<<< Updated upstream:tetrisGameCS250GroupProject/src/tetrisGameCS250GroupProject FINAL TETRIS
 	
 	    drawGridBackground(g);
 	
@@ -313,25 +312,6 @@ public class TetrisGame extends JPanel {
 	        drawPiece(g);      // Draw the falling piece
 	        drawNextPiece(g);  // Draw the "Next Piece" and controls
 	    }
-=======
-        drawGridBackground(g);
-
-        if (!gameStarted) {
-            showTitleScreen(g);
-            drawLeaderboard(g); // Draw the leaderboard on the title screen
-        } else {
-            for (int i = 0; i < 12; i++) {
-                for (int j = 0; j < 23; j++) {
-                    g.setColor(well[i][j]);
-                    g.fillRect(26 * i, 26 * j, 25, 25);
-                }
-            }
-            g.setColor(Color.CYAN);
-            g.drawString("Score: " + score, 26 * 13, 25);
-            drawPiece(g); // Draw the current piece on the game board
-            drawNextPiece(g); // Draw the next piece
-        }
->>>>>>> Stashed changes:tetrisGameCS250GroupProject/src/tetrisGameCS250GroupProject/TetrisGame.java
 	} // paintComponent()
 
 	/**
@@ -558,13 +538,8 @@ public class TetrisGame extends JPanel {
                        }
                 } else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
                     game.gameStarted = true;
-<<<<<<< Updated upstream:tetrisGameCS250GroupProject/src/tetrisGameCS250GroupProject FINAL TETRIS
                     game.startGame(); // Call the method to start the game logic
                     game.repaint();    // Repaint the screen to update the display
-=======
-                    game.initialize();
-                    game.repaint();
->>>>>>> Stashed changes:tetrisGameCS250GroupProject/src/tetrisGameCS250GroupProject/TetrisGame.java
                 }
             }
         });
